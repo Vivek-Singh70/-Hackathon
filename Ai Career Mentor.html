@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Career Mentor — Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1724; /* deep navy */
+      --card:#0b1220;
+      --accent:#6ee7b7;
+      --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+      --card-radius:16px;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,var(--bg) 0%, #071021 100%);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:40px 20px;
+    }
+    .container{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;gap:24px;margin-bottom:28px}
+    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#0ea5a9,#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:800;color:#052226}
+    h1{font-size:24px;margin:0}
+    p.lead{margin:4px 0 0;color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:22px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr;}}
+
+    /* Card */
+    .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.015));border-radius:var(--card-radius);padding:18px;box-shadow:0 6px 30px rgba(2,6,23,0.6);}
+
+    /* Left column */
+    .intro{display:flex;gap:18px;align-items:flex-start}
+    .intro h2{margin:0;font-size:20px}
+    .small{font-size:13px;color:var(--muted)}
+
+    form{display:grid;gap:12px;margin-top:12px}
+    label{font-size:13px;color:var(--muted)}
+    input[type="text"], textarea, select{width:100%;padding:10px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:inherit;font-size:14px}
+    textarea{min-height:90px;resize:vertical}
+    .row{display:flex;gap:10px}
+    .row > *{flex:1}
+
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,#06b6d4,#60a5fa);color:#051425;font-weight:700;border:none;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+
+    /* Right column */
+    .results{display:flex;flex-direction:column;gap:12px}
+    .pill{display:inline-flex;padding:6px 10px;border-radius:999px;background:var(--glass-2);font-weight:600;color:var(--accent);border:1px solid rgba(110,231,183,0.08)}
+
+    .section-title{font-size:14px;margin-bottom:8px;color:var(--muted)}
+    .list{display:flex;flex-direction:column;gap:8px}
+    .list .item{background:rgba(255,255,255,0.02);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .item h4{margin:0 0 6px 0;font-size:15px}
+    .item p{margin:0;font-size:13px;color:var(--muted)}
+
+    footer{margin-top:22px;color:var(--muted);font-size:13px}
+
+    /* progress */
+    .progress{height:12px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#60a5fa);width:0}
+
+    /* small helper */
+    .muted{color:var(--muted);font-size:13px}
+
+    .resource a{color:var(--accent);text-decoration:none;font-weight:600}
+
+    /* responsive tweaks */
+    @media (max-width:520px){
+      header{flex-direction:column;align-items:flex-start}
+      .logo{width:56px;height:56px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">AIM</div>
+      <div>
+        <h1>AI Career Mentor — Student Demo</h1>
+        <p class="lead">Personalized suggestions, roadmaps and quick learning plans based on a student's skills and projects.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <main>
+        <div class="card">
+          <div class="intro">
+            <div>
+              <h2>Tell me about the student</h2>
+              <p class="small">Enter skills, interests, projects or paste resume bullets. Click <strong>Analyze</strong> to get tailored role suggestions and a learning roadmap.</p>
+            </div>
+            <div class="pill">Preview</div>
+          </div>
+
+          <form id="profileForm" onsubmit="return false;" aria-label="student profile form">
+            <div class="row">
+              <div>
+                <label for="name">Student name</label>
+                <input id="name" type="text" placeholder="e.g. Priya Sharma" />
+              </div>
+              <div>
+                <label for="year">Year / Grade</label>
+                <input id="year" type="text" placeholder="e.g. 3rd year, 12th grade" />
+              </div>
+            </div>
+
+            <label for="skills">Skills (comma separated)</label>
+            <input id="skills" type="text" placeholder="Python, Excel, Data Analysis, JavaScript" />
+
+            <label for="interests">Interests / Career themes</label>
+            <input id="interests" type="text" placeholder="AI, product design, finance, healthcare" />
+
+            <label for="projects">Key projects / achievements (short bullets)</label>
+            <textarea id="projects" placeholder="Built sentiment-analysis model; Interned at X; Created portfolio website"></textarea>
+
+            <div class="row" style="margin-top:6px;">
+              <button class="btn" id="analyzeBtn">Analyze & Recommend</button>
+              <button class="btn ghost" id="roadmapBtn" type="button">Generate Roadmap</button>
+            </div>
+
+            <p class="muted" style="margin-top:8px;">This demo runs locally in your browser — no server. The AI is simulated with simple heuristics so you can test the flow quickly.</p>
+          </form>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <h3 style="margin:0 0 8px 0">Skill Development Suggestions</h3>
+          <div id="skillDev" class="list">
+            <div class="item"><h4>Start by clarifying goals</h4><p class="muted">Pick 1–2 focus areas (example: Data Science + Product) to avoid spreading too thin.</p></div>
+            <div class="item"><h4>Project ideas</h4><p class="muted">Small projects linked to skills — e.g., Build a personal portfolio, Create a dataset and run EDA with Python.</p></div>
+            <div class="item"><h4>Internship hunting</h4><p class="muted">Prepare a short 1-line project summary & a GitHub link. Apply to 3 relevant internships per week.</p></div>
+          </div>
+        </div>
+
+      </main>
+
+      <aside>
+        <div class="card results">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="section-title">Top role fits</div>
+              <div id="roles"></div>
+            </div>
+            <div style="text-align:right">
+              <div class="section-title">Progress</div>
+              <div class="progress" title="profile completion">
+                <i id="progressBar"></i>
+              </div>
+              <div class="small muted" style="margin-top:6px;font-size:12px">Save progress locally</div>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0" />
+
+          <div>
+            <div class="section-title">Recommended learning roadmap</div>
+            <div id="roadmap" class="list">
+              <div class="item"><h4>Analyze first</h4><p class="muted">Click Generate Roadmap to build a step-by-step plan with free resources.</p></div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div class="section-title">Suggested resources (samples)</div>
+            <div id="resources" class="list">
+              <div class="item resource"><h4>Intro to Python</h4><p class="muted">Free course: <a href="#" onclick="return false">Coursera / freeCodeCamp / Khan Academy</a></p></div>
+              <div class="item resource"><h4>Portfolio & GitHub</h4><p class="muted">Guides & templates available publicly — start with a single polished project.</p></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn ghost" id="saveBtn">Save Profile</button>
+            <button class="btn" id="resetBtn">Reset</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h4 style="margin:0 0 6px 0">Why it helps</h4>
+          <p class="muted">This mock UI shows the core UX for: profile analysis, role matching, roadmap generation and progress tracking — the building blocks of an AI career mentor product.</p>
+        </div>
+
+      </aside>
+    </div>
+
+    <footer class="container">
+      <p class="muted">Copy this single file into VS Code as <code>index.html</code> and open it in your browser. The demo runs entirely in your browser using JavaScript.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Small heuristic-based demo engine to produce role suggestions and roadmap
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const roadmapBtn = document.getElementById('roadmapBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    analyzeBtn.addEventListener('click', () => {
+      const skills = (document.getElementById('skills').value||'').toLowerCase();
+      const interests = (document.getElementById('interests').value||'').toLowerCase();
+      const projects = (document.getElementById('projects').value||'').toLowerCase();
+
+      const matches = new Set();
+
+      // simple keyword matching heuristics
+      const map = [
+        {k:['python','pandas','numpy','machine learning','ml','data'], v:'Data Scientist / ML Engineer'},
+        {k:['excel','accounting','finance','financial'], v:'Business Analyst / Finance Intern'},
+        {k:['javascript','react','frontend','html','css'], v:'Frontend Developer / UI Engineer'},
+        {k:['ui','ux','design','figma','adobe'], v:'Product Designer / UX Designer'},
+        {k:['embedded','arduino','raspberry','iot'], v:'Embedded Systems / IoT Engineer'},
+        {k:['marketing','seo','content','social'], v:'Digital Marketing / Growth'},
+        {k:['robotics','control','c++','ros'], v:'Robotics Engineer'},
+        {k:['biology','bio','healthcare','medicine'], v:'Bioinformatics / Healthcare Analyst'}
+      ];
+
+      map.forEach(entry => {
+        entry.k.forEach(keyword => {
+          if(skills.includes(keyword) || interests.includes(keyword) || projects.includes(keyword)) matches.add(entry.v);
+        })
+      })
+
+      // if nothing matched, look for generic clues
+      if(matches.size === 0) {
+        if(interests.includes('research') || projects.includes('paper')) matches.add('Research / Academia');
+        else matches.add('Generalist — Explore internships & short projects');
+      }
+
+      // show top 3
+      const rolesDiv = document.getElementById('roles');
+      rolesDiv.innerHTML = '';
+      Array.from(matches).slice(0,3).forEach(r => {
+        const d = document.createElement('div'); d.className='pill'; d.style.marginTop='8px'; d.textContent = r; rolesDiv.appendChild(d);
+      })
+
+      // progress bar heuristics
+      let score = 10;
+      if(document.getElementById('name').value) score += 20;
+      if(document.getElementById('year').value) score += 10;
+      if(skills) score += 30;
+      if(interests) score += 20;
+      if(projects) score += 10;
+      score = Math.min(100, score);
+      document.getElementById('progressBar').style.width = score + '%';
+
+    });
+
+    roadmapBtn.addEventListener('click', () => {
+      const skills = (document.getElementById('skills').value||'').toLowerCase();
+      const roadmap = document.getElementById('roadmap');
+      roadmap.innerHTML = '';
+
+      // generate a simple 3-step roadmap
+      const steps = [];
+      if(skills.includes('python') || skills.includes('data') || skills.includes('ml')){
+        steps.push({title:'1. Fundamentals', desc:'Complete an Intro to Python + Data Analysis course (free). Build 2 small projects: EDA + simple model.'});
+        steps.push({title:'2. Portfolio', desc:'Polish GitHub README, document projects and write a 1-page case study for your best project.'});
+        steps.push({title:'3. Apply & Network', desc:'Apply to internships, participate in competitions (Kaggle / hackathons), and connect with alumni.'});
+      } else if(skills.includes('javascript') || skills.includes('react')){
+        steps.push({title:'1. Core Web', desc:'Follow a guided path: HTML/CSS/JS → React fundamentals → Build 3 UI components and a small SPA.'});
+        steps.push({title:'2. Portfolio', desc:'Deploy your portfolio (GitHub Pages / Netlify) and add a live demo link.'});
+        steps.push({title:'3. Job Prep', desc:'Practice frontend interview problems and prepare a 2-minute elevator pitch for your projects.'});
+      } else {
+        steps.push({title:'1. Explore', desc:'Pick 2 short courses or tutorials in areas that interest you and finish one mini project in each.'});
+        steps.push({title:'2. Focus', desc:'Choose 1 area to double down on. Create a small project related to that area.'});
+        steps.push({title:'3. Share', desc:'Publish your work to GitHub/Portfolio and ask for feedback from mentors or peers.'});
+      }
+
+      steps.forEach(s => {
+        const it = document.createElement('div'); it.className='item';
+        it.innerHTML = `<h4>${s.title}</h4><p class='muted'>${s.desc}</p>`;
+        roadmap.appendChild(it);
+      });
+
+      // sample resources update
+      const resources = document.getElementById('resources');
+      resources.innerHTML = '';
+      const sample = [
+        {t:'FreeCodeCamp — Python & Data', u:'#'},
+        {t:'Coursera — Data Science (audit free)', u:'#'},
+        {t:'freeCodeCamp — Frontend Certification', u:'#'}
+      ];
+      sample.forEach(r=>{
+        const el = document.createElement('div'); el.className='item resource'; el.innerHTML = `<h4>${r.t}</h4><p class='muted'>Free / audit option available — start with the first module.</p>`; resources.appendChild(el);
+      });
+
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const profile = {
+        name: document.getElementById('name').value,
+        year: document.getElementById('year').value,
+        skills: document.getElementById('skills').value,
+        interests: document.getElementById('interests').value,
+        projects: document.getElementById('projects').value,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem('aiCareerProfile', JSON.stringify(profile));
+      alert('Profile saved locally in your browser.');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      if(confirm('Reset the demo inputs and recommendations?')){
+        document.getElementById('profileForm').reset();
+        document.getElementById('roles').innerHTML='';
+        document.getElementById('roadmap').innerHTML='<div class="item"><h4>Analyze first</h4><p class="muted">Click Generate Roadmap to build a step-by-step plan with free resources.</p></div>';
+        document.getElementById('resources').innerHTML='';
+        document.getElementById('progressBar').style.width='0%';
+      }
+    });
+
+    // load saved profile if present
+    (function loadSaved(){
+      try{
+        const s = localStorage.getItem('aiCareerProfile');
+        if(!s) return;
+        const p = JSON.parse(s);
+        document.getElementById('name').value = p.name||'';
+        document.getElementById('year').value = p.year||'';
+        document.getElementById('skills').value = p.skills||'';
+        document.getElementById('interests').value = p.interests||'';
+        document.getElementById('projects').value = p.projects||'';
+        // auto-run one analysis
+        document.getElementById('analyzeBtn').click();
+      }catch(e){console.warn(e)}
+    })();
+  </script>
+</body>
+</html>
