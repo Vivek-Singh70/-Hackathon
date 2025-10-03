@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Accessibility Toolkit — Speech↔Text, Image→Audio, Video Subtitles</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.4;margin:18px;background:#f7f8fb;color:#111}
+  h1{font-size:1.25rem}
+  .card{background:#fff;border-radius:8px;padding:14px;margin:12px 0;box-shadow:0 1px 4px rgba(20,30,60,.06)}
+  label{display:block;font-weight:600;margin-top:8px}
+  button, select, input[type="text"], textarea {font:inherit;padding:8px;border-radius:6px;border:1px solid #d0d6df}
+  textarea{width:100%;min-height:76px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .subtitleOverlay{position:relative}
+  #videoSubtitles{position:absolute;left:0;right:0;bottom:6%;text-align:center;padding:6px 12px;background:rgba(0,0,0,0.6);color:#fff;border-radius:6px;margin:0 auto;font-size:1.05rem}
+  .small{font-size:0.9rem;color:#444}
+  .status{font-size:0.9rem;color:#0a66ff}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .col{flex:1 1 300px;min-width:260px}
+  input[type=file]{padding:6px}
+  footer{margin-top:20px;color:#666;font-size:0.9rem}
+</style>
+</head>
+<body>
+  <h1>Accessibility Toolkit</h1>
+  <p class="small">Speech↔Text, Image → Audio descriptions, and Real-time subtitles for videos. All client-side; optional integration points for cloud caption & speech-to-text services using your API keys.</p>
+
+  <!-- 1) Speech-to-Text -->
+  <div class="card" id="speechToTextCard">
+    <h2>Speech → Text (Live Transcription)</h2>
+    <div class="small">Uses your browser's SpeechRecognition (Web Speech API). Click Start to transcribe microphone audio live.</div>
+    <div class="controls" style="margin-top:10px;">
+      <button id="sttStartBtn">Start Transcription</button>
+      <button id="sttStopBtn" disabled>Stop</button>
+      <button id="sttClearBtn">Clear</button>
+      <label style="margin-left:10px">Language:
+        <select id="sttLang">
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="hi-IN">Hindi (India)</option>
+          <option value="es-ES">Spanish</option>
+          <option value="fr-FR">French</option>
+        </select>
+      </label>
+    </div>
+    <label>Live transcript:</label>
+    <textarea id="liveTranscript" placeholder="Transcript will appear here..." readonly></textarea>
+    <div class="controls">
+      <button id="downloadTranscriptBtn">Download .txt</button>
+      <div class="status" id="sttStatus"></div>
+    </div>
+  </div>
+
+  <!-- 2) Text-to-Speech -->
+  <div class="card">
+    <h2>Text → Speech</h2>
+    <label>Enter text:</label>
+    <textarea id="ttsText">Welcome. This is a demo for text to speech accessibility features.</textarea>
+    <div class="row" style="align-items:center">
+      <div class="col">
+        <label>Voice:</label>
+        <select id="voiceSelect"></select>
+      </div>
+      <div class="col">
+        <label>Rate (0.5–2):</label>
+        <input id="rate" type="range" min="0.5" max="2" step="0.1" value="1">
+      </div>
+      <div class="col">
+        <label>Pitch (0–2):</label>
+        <input id="pitch" type="range" min="0" max="2" step="0.1" value="1">
+      </div>
+    </div>
+    <div class="controls">
+      <button id="speakBtn">Speak</button>
+      <button id="stopSpeakBtn" disabled>Stop</button>
+      <button id="pauseSpeakBtn" disabled>Pause</button>
+    </div>
+  </div>
+
+  <!-- 3) Image to Audio Descriptions -->
+  <div class="card">
+    <h2>Image → Audio Description</h2>
+    <div class="small">Upload an image. Optionally provide a Hugging Face Inference API token to auto-generate captions (or type a description manually). The caption will be read aloud.</div>
+    <label>Image file:</label>
+    <input id="imageInput" type="file" accept="image/*">
+    <div style="margin-top:8px">
+      <img id="imagePreview" alt="" style="max-width:100%;border-radius:8px;display:none;border:1px solid #e0e6ef" />
+    </div>
+    <label style="margin-top:8px">Auto-captioning (optional):</label>
+    <div class="small">Paste a Hugging Face Inference API token (or leave blank to use manual description). Note: the Hugging Face Inference API expects a token and has usage limits — you supply the token.</div>
+    <input id="hfToken" type="text" placeholder="hf_xxx (your Hugging Face token)">
+    <div class="controls">
+      <button id="generateCaptionBtn">Generate Caption (API)</button>
+      <button id="readCaptionBtn">Read Caption</button>
+      <button id="copyCaptionBtn">Copy Caption</button>
+    </div>
+    <label>Caption / Description:</label>
+    <textarea id="imageCaption" placeholder="Caption will appear here..."></textarea>
+    <div id="imageStatus" class="status"></div>
+  </div>
+
+  <!-- 4) Real-time Subtitle Generator for Videos -->
+  <div class="card">
+    <h2>Real-time Subtitle Generator for Videos</h2>
+    <div class="small">Option A — Live mic captions while playing a video aloud (works immediately). Option B — Upload a video file and optionally send its extracted audio to an external speech-to-text API (you must supply the endpoint & API key).</div>
+
+    <label>Upload video (optional — you can also use a remote video URL by editing the video src):</label>
+    <input id="videoFileInput" type="file" accept="video/*">
+    <div style="margin-top:8px" class="subtitleOverlay">
+      <video id="videoPlayer" controls style="max-width:100%;background:#000;border-radius:8px">
+        <source id="videoSource">
+        Your browser does not support HTML5 video.
+      </video>
+      <div id="videoSubtitles" aria-live="polite" style="display:none"></div>
+    </div>
+
+    <div class="controls">
+      <button id="startVideoMicSubBtn">Start Mic Subtitles</button>
+      <button id="stopVideoMicSubBtn" disabled>Stop Mic Subtitles</button>
+      <label style="margin-left:12px">Language:
+        <select id="videoSttLang">
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="hi-IN">Hindi</option>
+        </select>
+      </label>
+    </div>
+
+    <hr style="margin:10px 0">
+
+    <div>
+      <label>Upload video → Extract audio → Send to STT API (optional)</label>
+      <div class="small">If you have a cloud STT endpoint that accepts audio files (OpenAI Whisper-like or AssemblyAI), paste its URL and your API key below. The page converts video audio to WAV and uploads it.</div>
+      <input id="sttEndpoint" type="text" placeholder="https://api.example.com/your-stt-endpoint">
+      <input id="sttApiKey" type="text" placeholder="API Key (if required)">
+
+      <div class="controls">
+        <button id="extractAndSendBtn">Extract Audio & Send to STT API</button>
+        <div id="sttUploadStatus" class="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>Notes: For best results use Chrome/Edge. If browser doesn't support SpeechRecognition, the page will show a message and mic-based features will be disabled. When using third-party APIs make sure CORS is enabled on the API or use a server proxy.</div>
+  </footer>
+
+<script>
+/* ================== Utilities ================== */
+function $(id){return document.getElementById(id);}
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+function downloadFile(filename, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+  a.download = filename;
+  a.click();
+}
+
+/* ================== 1) Speech → Text (Web Speech API) ================== */
+let recognition = null;
+let recognizing = false;
+let transcriptBuf = '';
+const sttStatus = $('sttStatus');
+
+function setupSpeechRecognition(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    sttStatus.textContent = 'SpeechRecognition not supported in this browser.';
+    $('sttStartBtn').disabled = true;
+    $('sttStopBtn').disabled = true;
+    return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = $('sttLang').value;
+
+  recognition.onstart = ()=> {
+    recognizing = true;
+    $('sttStartBtn').disabled = true;
+    $('sttStopBtn').disabled = false;
+    sttStatus.textContent = 'Listening...';
+  };
+  recognition.onerror = e => {
+    console.warn('STT error', e);
+    sttStatus.textContent = 'Error: ' + (e.error || JSON.stringify(e));
+  };
+  recognition.onend = ()=> {
+    recognizing = false;
+    $('sttStartBtn').disabled = false;
+    $('sttStopBtn').disabled = true;
+    sttStatus.textContent = 'Stopped.';
+  };
+  recognition.onresult = (event) => {
+    let interim = '';
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      const res = event.results[i];
+      if(res.isFinal) transcriptBuf += res[0].transcript;
+      else interim += res[0].transcript;
+    }
+    $('liveTranscript').value = transcriptBuf + (interim ? '\n[interim] ' + interim : '');
+  };
+}
+$('sttStartBtn').addEventListener('click', ()=>{
+  if(!recognition) setupSpeechRecognition();
+  if(!recognition) return;
+  recognition.lang = $('sttLang').value;
+  transcriptBuf = $('liveTranscript').value || '';
+  recognition.start();
+});
+$('sttStopBtn').addEventListener('click', ()=> recognition && recognition.stop());
+$('sttClearBtn').addEventListener('click', ()=> {$('liveTranscript').value=''; transcriptBuf='';});
+$('downloadTranscriptBtn').addEventListener('click', ()=>{
+  const t = $('liveTranscript').value || '';
+  downloadFile('transcript.txt', t);
+});
+
+/* ================== 2) Text → Speech (SpeechSynthesis) ================== */
+const synth = window.speechSynthesis;
+function populateVoices(){
+  const sel = $('voiceSelect');
+  sel.innerHTML = '';
+  const voices = synth.getVoices();
+  if(!voices.length){
+    // may be empty until voicesloaded event
+    setTimeout(populateVoices, 200);
+    return;
+  }
+  voices.forEach(v=>{
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${v.name} — ${v.lang}${v.default ? ' (default)':''}`;
+    sel.appendChild(opt);
+  });
+}
+populateVoices();
+if(synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoices;
+
+let currentUtterance = null;
+$('speakBtn').addEventListener('click', ()=>{
+  const text = $('ttsText').value.trim();
+  if(!text) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  const selectedName = $('voiceSelect').value;
+  const voices = synth.getVoices();
+  utter.voice = voices.find(v=>v.name===selectedName) || null;
+  utter.rate = parseFloat($('rate').value);
+  utter.pitch = parseFloat($('pitch').value);
+  utter.onstart = ()=> {
+    $('stopSpeakBtn').disabled = false;
+    $('pauseSpeakBtn').disabled = false;
+  };
+  utter.onend = ()=> {
+    $('stopSpeakBtn').disabled = true;
+    $('pauseSpeakBtn').disabled = true;
+  };
+  currentUtterance = utter;
+  synth.speak(utter);
+});
+$('stopSpeakBtn').addEventListener('click', ()=> { synth.cancel(); $('stopSpeakBtn').disabled=true; $('pauseSpeakBtn').disabled=true;});
+$('pauseSpeakBtn').addEventListener('click', ()=> {
+  if(synth.paused) { synth.resume(); $('pauseSpeakBtn').textContent='Pause'; }
+  else { synth.pause(); $('pauseSpeakBtn').textContent='Resume'; }
+});
+
+/* ================== 3) Image → Audio Description ================== */
+$('imageInput').addEventListener('change', async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  const img = $('imagePreview');
+  img.src = url;
+  img.style.display = 'block';
+  img.alt = f.name;
+  $('imageCaption').value = `Image: ${f.name}.`;
+  $('imageStatus').textContent = '';
+});
+$('generateCaptionBtn').addEventListener('click', async ()=>{
+  const token = $('hfToken').value.trim();
+  const input = $('imageInput').files[0];
+  if(!input){ $('imageStatus').textContent = 'Please select an image first.'; return; }
+  if(!token){ $('imageStatus').textContent = 'No API token provided — will not call external service.'; return; }
+
+  $('imageStatus').textContent = 'Requesting caption from API...';
+  try {
+    // Use Hugging Face Inference API for image captioning as an example:
+    // Model examples: "nlpconnect/vit-gpt2-image-captioning" or "Salesforce/blip-image-captioning-base"
+    // NOTE: the Inference API expects form-data with the file for image inputs.
+    const hfModel = 'nlpconnect/vit-gpt2-image-captioning'; // change if desired
+    const url = `https://api-inference.huggingface.co/models/${hfModel}`;
+    const fd = new FormData();
+    fd.append('file', input);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: fd
+    });
+    if(!res.ok) {
+      const txt = await res.text();
+      throw new Error('API error: ' + res.status + ' — ' + txt);
+    }
+    const data = await res.json();
+    // HF returns array of captions or text depending on model; handle common shapes.
+    let caption = '';
+    if(Array.isArray(data) && data.length && data[0].generated_text) caption = data[0].generated_text;
+    else if(Array.isArray(data) && data.length && data[0].caption) caption = data[0].caption;
+    else if(typeof data === 'object' && data.caption) caption = data.caption;
+    else if(typeof data === 'string') caption = data;
+    else caption = JSON.stringify(data);
+
+    $('imageCaption').value = caption;
+    $('imageStatus').textContent = 'Caption generated.';
+    speakText(caption);
+  } catch(err){
+    console.error(err);
+    $('imageStatus').textContent = 'Caption failed: ' + err.message;
+  }
+});
+$('readCaptionBtn').addEventListener('click', ()=> {
+  const c = $('imageCaption').value.trim();
+  if(!c) { $('imageStatus').textContent = 'Caption empty.'; return; }
+  speakText(c);
+});
+$('copyCaptionBtn').addEventListener('click', async ()=> {
+  const c = $('imageCaption').value;
+  await navigator.clipboard.writeText(c || '');
+  $('imageStatus').textContent = 'Copied to clipboard.';
+});
+
+function speakText(text){
+  if(!text) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = parseFloat($('rate').value || 1);
+  utter.pitch = parseFloat($('pitch').value || 1);
+  const voices = synth.getVoices();
+  if(voices.length) utter.voice = voices[0];
+  synth.speak(utter);
+}
+
+/* ================== 4) Real-time Subtitle Generator for Videos ================== */
+/* A: Mic-based live subtitles */
+let videoRecognition = null;
+let videoRecognizing = false;
+const videoSubEl = $('videoSubtitles');
+function setupVideoRecognition(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){ $('startVideoMicSubBtn').disabled=true; $('stopVideoMicSubBtn').disabled=true; return; }
+  videoRecognition = new SpeechRecognition();
+  videoRecognition.continuous = true;
+  videoRecognition.interimResults = true;
+  videoRecognition.lang = $('videoSttLang').value;
+  videoRecognition.onresult = (event) => {
+    let interim='';
+    let final='';
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      const r = event.results[i];
+      if(r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    const display = final || interim;
+    if(display){
+      videoSubEl.style.display = 'block';
+      videoSubEl.textContent = display;
+    }
+  };
+  videoRecognition.onstart = ()=> {
+    videoRecognizing = true;
+    $('startVideoMicSubBtn').disabled = true;
+    $('stopVideoMicSubBtn').disabled = false;
+  };
+  videoRecognition.onend = ()=> {
+    videoRecognizing = false;
+    $('startVideoMicSubBtn').disabled = false;
+    $('stopVideoMicSubBtn').disabled = true;
+  };
+  videoRecognition.onerror = (e) => console.warn('Video STT error', e);
+}
+$('startVideoMicSubBtn').addEventListener('click', ()=>{
+  if(!videoRecognition) setupVideoRecognition();
+  if(!videoRecognition) return;
+  videoRecognition.lang = $('videoSttLang').value;
+  videoRecognition.start();
+});
+$('stopVideoMicSubBtn').addEventListener('click', ()=> {
+  if(videoRecognition) videoRecognition.stop();
+  videoSubEl.style.display = 'none';
+});
+
+/* B: Upload video -> extract audio -> POST to STT endpoint (user-provided) */
+$('videoFileInput').addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  $('videoSource').src = url;
+  $('videoPlayer').load();
+});
+
+$('extractAndSendBtn').addEventListener('click', async ()=>{
+  const file = $('videoFileInput').files[0];
+  const endpoint = $('sttEndpoint').value.trim();
+  const apiKey = $('sttApiKey').value.trim();
+  if(!file){ $('sttUploadStatus').textContent = 'Please upload a video file first.'; return;}
+  if(!endpoint){ $('sttUploadStatus').textContent = 'Please paste the STT API endpoint URL.'; return; }
+  $('sttUploadStatus').textContent = 'Extracting audio...';
+
+  try {
+    // Read file as ArrayBuffer and decode audio tracks (if possible)
+    // Approach: use <video> tag + WebAudio to capture decoded audio by playing it muted in an offline AudioContext.
+    // Simpler cross-browser way: use MediaSource and decode with AudioContext.decodeAudioData from array buffer.
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Attempt to demux using AudioContext.decodeAudioData — works if file has audio and browser can decode container.
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuffer;
+    try {
+      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+    } catch (decodeErr) {
+      // decodeAudioData failed (common for some containers). As fallback, try to create blob URL and use <audio> element + captureStream
+      console.warn('decodeAudioData failed:', decodeErr);
+      $('sttUploadStatus').textContent = 'Browser could not decode audio directly. Trying fallback (may not work).';
+      // Fallback: create an audio element, play it (muted), route through MediaStreamAudioDestination.
+      const blobUrl = URL.createObjectURL(file);
+      const audioEl = document.createElement('audio');
+      audioEl.src = blobUrl;
+      audioEl.crossOrigin = 'anonymous';
+      await audioEl.play().catch(()=>{/* may require user gesture */});
+      const dest = audioCtx.createMediaElementSource(audioEl);
+      // Create offline rendering
+      // NOTE: fallback complexity — we will still try to capture by recording from MediaStream if allowed
+      $('sttUploadStatus').textContent = 'Fallback not implemented fully in this environment.';
+      throw new Error('Audio decode fallback not reliable in-page. Consider uploading audio to server-side tool.');
+    }
+
+    // Convert audioBuffer to WAV (16bit PCM)
+    const wavBlob = audioBufferToWavBlob(audioBuffer);
+    $('sttUploadStatus').textContent = 'Audio extracted, sending to STT endpoint...';
+
+    // POST to endpoint (user must ensure endpoint accepts multipart/form-data)
+    const fd = new FormData();
+    fd.append('file', wavBlob, 'extracted_audio.wav');
+
+    const headers = {};
+    if(apiKey) headers['Authorization'] = 'Bearer ' + apiKey;
+
+    const res = await fetch(endpoint, { method:'POST', headers, body: fd });
+    if(!res.ok) {
+      const text = await res.text();
+      throw new Error('STT API error: ' + res.status + ' — ' + text);
+    }
+    const json = await res.json();
+    // The response shape depends on the API. Try to extract common fields.
+    let transcript = '';
+    if(json.text) transcript = json.text;
+    else if(json.transcript) transcript = json.transcript;
+    else if(typeof json === 'string') transcript = json;
+    else transcript = JSON.stringify(json);
+
+    $('sttUploadStatus').textContent = 'Transcript received.';
+    // Show overlay subtitles and also put into imageCaption area for reading
+    videoSubEl.style.display = 'block';
+    videoSubEl.textContent = transcript;
+    $('imageCaption').value = transcript;
+    speakText(transcript);
+  } catch(err){
+    console.error(err);
+    $('sttUploadStatus').textContent = 'Failed: ' + (err.message || err);
+  }
+});
+
+/* Convert AudioBuffer to WAV blob (16-bit PCM) */
+function audioBufferToWavBlob(buffer, opt){
+  opt = opt || {};
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitsPerSample = 16;
+  const bytesPerSample = bitsPerSample/8;
+  let numSamples = buffer.length * numChannels;
+  const blockAlign = numChannels * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = buffer.length * blockAlign;
+  const bufferArray = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(bufferArray);
+
+  /* RIFF identifier */
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // fmt chunk length
+  view.setUint16(20, format, true); // format
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  // Write interleaved PCM samples
+  let offset = 44;
+  const tmp = new Float32Array(buffer.length);
+  for(let i=0;i<buffer.length;i++){
+    for(let ch=0;ch<numChannels;ch++){
+      const channelData = buffer.getChannelData(ch);
+      let sample = channelData[i];
+      // clamp
+      sample = Math.max(-1, Math.min(1, sample));
+      // scale to 16-bit
+      const s = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      view.setInt16(offset, s, true);
+      offset += 2;
+    }
+  }
+  return new Blob([view], {type:'audio/wav'});
+}
+function writeString(view, offset, string){
+  for(let i=0;i<string.length;i++){
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+/* Initialize recognizers where supported */
+setupSpeechRecognition();
+setupVideoRecognition();
+
+</script>
+</body>
+</html>
