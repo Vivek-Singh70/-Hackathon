@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>REALorRUMOR – Fake News Detector</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #eef2f3, #d4eaf7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+    }
+
+    h1 {
+      color: #1a237e;
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #3949ab;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      background: white;
+      max-width: 600px;
+      width: 100%;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 15px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 20px;
+      background-color: #1976d2;
+      color: white;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+      border-radius: 10px;
+    }
+
+    .fake {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .genuine {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #757575;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>REALorRUMOR</h1>
+  <div class="subtitle">AI-Powered Fake News Detector</div>
+
+  <div class="container">
+    <form id="checkForm">
+      <label for="newsText"><strong>Paste the news, tweet, or forward:</strong></label><br>
+      <textarea id="newsText" name="newsText" placeholder="Paste content here..." required></textarea><br>
+      <button type="submit">🔍 Check Authenticity</button>
+    </form>
+
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <footer>
+    &copy; 2025 REALorRUMOR | Fighting Misinformation with AI
+  </footer>
+
+  <script>
+    const form = document.getElementById('checkForm');
+    const resultDiv = document.getElementById('result');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const content = document.getElementById('newsText').value.trim();
+      if (!content) {
+        alert("Please paste some content to check.");
+        return;
+      }
+
+      // Show loading message
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result';
+      resultDiv.textContent = '🔎 Checking content authenticity...';
+
+      // Simulated response - you should replace this with a real backend call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const isFake = Math.random() < 0.5;
+
+      if (isFake) {
+        resultDiv.textContent = "🚨 This content appears to be a RUMOR (Fake)";
+        resultDiv.classList.add('fake');
+      } else {
+        resultDiv.textContent = "✅ This content appears to be REAL (Genuine)";
+        resultDiv.classList.add('genuine');
+      }
+    });
+  </script>
+
+</body>
+</html>
